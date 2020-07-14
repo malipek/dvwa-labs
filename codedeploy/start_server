@@ -1,15 +1,15 @@
 #!/bin/bash
 set -e
 set -u
-# get PROJECT and C_PREFFIX vars 
+# get PROJECTNAME and CPREFFIX vars 
 source .env_vars
 REGION=$(curl -s 169.254.169.254/latest/dynamic/instance-identity/document | jq -r ".region")
-VARS=$(aws --region $REGION ssm get-parameters-by-path --recursive --path /$C_PREFIX/$PROJECT/staging --with-decryption | jq -r '.Parameters | .[] | .Name + "=" + .Value' | sed -e s#/$C_PREFIX/$PROJECT/staging/##g)
+VARS=$(aws --region $REGION ssm get-parameters-by-path --recursive --path /$CPREFIX/$PROJECTNAME/staging --with-decryption | jq -r '.Parameters | .[] | .Name + "=" + .Value' | sed -e s#/$CPREFIX/$PROJECTNAME/staging/##g)
 for envvar in ${VARS}; do
   export $envvar;
 done
 cd /opt/codedeploy-agent/deployment-root/${DEPLOYMENT_GROUP_ID}/${DEPLOYMENT_ID}/deployment-archive
-COMPOSE="docker-compose -p $PROJECT -f docker-compose.yml"
+COMPOSE="docker-compose -p $PROJECTNAME -f docker-compose.yml"
 ${COMPOSE} build
 ${COMPOSE} up -d
 docker image prune -f

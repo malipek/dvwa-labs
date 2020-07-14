@@ -26,8 +26,8 @@ jobs:
       - run:
           name: Create env_vars file
           command: |
-            echo "C_PREFIX=CPREFIX" > codedeploy/.env_vars
-            echo "PROJECT=PROJECTNAME" >> codedeploy/.env_vars
+            echo "CPREFIX=$CPREFIX" > codedeploy/.env_vars
+            echo "PROJECTNAME=$PROJECTNAME" >> codedeploy/.env_vars
   deploy:
     executor: aws-cli/default
     steps:
@@ -43,13 +43,13 @@ jobs:
           aws-secret-access-key: STAGING_AWS_SECRET_ACCESS_KEY
           aws-region: STAGING_AWS_DEFAULT_REGION
       - aws-code-deploy/push-bundle:
-          application-name: CPREFIX-$PROJECTNAME-staging-main_app
-          bundle-bucket: CPREFIX-bucket-$PROJECTNAME-staging
+          application-name: $CPREFIX-$PROJECTNAME-staging-main_app
+          bundle-bucket: $CPREFIX-bucket-$PROJECTNAME-staging
           bundle-key: codedeploy/$CIRCLE_PROJECT_REPONAME-$CIRCLE_BUILD_NUM
       - aws-code-deploy/deploy-bundle:
-          application-name: CPREFIX-$PROJECTNAME-staging-main_app
-          deployment-group: CPREFIX-$PROJECTNAME-staging-main_app-group
-          bundle-bucket: CPREFIX-bucket-$PROJECTNAME-staging
+          application-name: $CPREFIX-$PROJECTNAME-staging-main_app
+          deployment-group: $CPREFIX-$PROJECTNAME-staging-main_app-group
+          bundle-bucket: $CPREFIX-bucket-$PROJECTNAME-staging
           bundle-key: codedeploy/$CIRCLE_PROJECT_REPONAME-$CIRCLE_BUILD_NUM
 workflows:
   version: 2
