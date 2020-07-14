@@ -1,0 +1,73 @@
+version: 2.1
+orbs:
+  aws-cli: circleci/aws-cli@1
+  aws-code-deploy: circleci/aws-code-deploy@1
+  # required vars:
+  # CPREFIX
+  # PROJECTNAME
+executors:
+  alpine:
+    docker:
+      - image: alpine:latest
+jobs:
+  checkout_code:
+    executor: alpine
+    steps:
+      - checkout
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - .
+  prepare_deployment_env:
+    executor: alpine
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Create env_vars file
+          command: |
+            echo "C_PREFIX=CPREFIX" > codedeploy/.env_vars
+            echo "PROJECT=PROJECTNAME" >> codedeploy/.env_vars
+  deploy:
+    executor: aws-cli/default
+    steps:
+      - run:
+          name: Setup Environment Variables
+          # https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-pagination.html#cli-usage-pagination-clientside
+          command: |
+            echo "export AWS_PAGER=" >> $BASH_ENV
+      - attach_workspace:
+          at: ~/project
+      - aws-cli/setup:
+          aws-access-key-id: STAGING_AWS_ACCESS_KEY_ID
+          aws-secret-access-key: STAGING_AWS_SECRET_ACCESS_KEY
+          aws-region: STAGING_AWS_DEFAULT_REGION
+      - aws-code-deploy/push-bundle:
+          application-name: CPREFIX-$PROJECTNAME-staging-main_app
+          bundle-bucket: CPREFIX-bucket-$PROJECTNAME-staging
+          bundle-key: codedeploy/$CIRCLE_PROJECT_REPONAME-$CIRCLE_BUILD_NUM
+      - aws-code-deploy/deploy-bundle:
+          application-name: CPREFIX-$PROJECTNAME-staging-main_app
+          deployment-group: CPREFIX-$PROJECTNAME-staging-main_app-group
+          bundle-bucket: CPREFIX-bucket-$PROJECTNAME-staging
+          bundle-key: codedeploy/$CIRCLE_PROJECT_REPONAME-$CIRCLE_BUILD_NUM
+workflows:
+  version: 2
+  build_test_deploy:
+    jobs:
+      - checkout_code:
+          filters:
+            branches:
+              only: master
+      - prepare_deployment_env:
+          requires:
+            - checkout_code
+          filters:
+            branches:
+              only: master
+      - deploy:
+          requires:
+            - prepare_deployment_env
+          filters:
+            branches:
+              only: master
