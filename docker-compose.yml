@@ -6,4 +6,4 @@ services:
       dockerfile: .docker/Dockerfile
     image: dvwa_poc_lab
     ports:
-      - 80:80
+      - 8081:80
