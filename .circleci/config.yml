@@ -18,8 +18,8 @@ jobs:
           root: ~/project
           paths:
             - .
-  prepare_deployment_env:
-    executor: alpine
+  deploy:
+    executor: aws-cli/default
     steps:
       - attach_workspace:
           at: ~/project
@@ -28,16 +28,6 @@ jobs:
           command: |
             echo "CPREFIX=$CPREFIX" > codedeploy/.env_vars
             echo "PROJECTNAME=$PROJECTNAME" >> codedeploy/.env_vars
-  deploy:
-    executor: aws-cli/default
-    steps:
-      - run:
-          name: Setup Environment Variables
-          # https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-pagination.html#cli-usage-pagination-clientside
-          command: |
-            echo "export AWS_PAGER=" >> $BASH_ENV
-      - attach_workspace:
-          at: ~/project
       - aws-cli/setup:
           aws-access-key-id: STAGING_AWS_ACCESS_KEY_ID
           aws-secret-access-key: STAGING_AWS_SECRET_ACCESS_KEY
@@ -59,15 +49,9 @@ workflows:
           filters:
             branches:
               only: master
-      - prepare_deployment_env:
-          requires:
-            - checkout_code
-          filters:
-            branches:
-              only: master
       - deploy:
           requires:
-            - prepare_deployment_env
+            - checkout_code
           filters:
             branches:
               only: master
