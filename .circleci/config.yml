@@ -26,8 +26,8 @@ jobs:
       - run:
           name: Create env_vars file
           command: |
-            echo "CPREFIX=$CPREFIX" > codedeploy/.env_vars
-            echo "PROJECTNAME=$PROJECTNAME" >> codedeploy/.env_vars
+            echo "export CPREFIX=$CPREFIX" > codedeploy/.env_vars
+            echo "export PROJECTNAME=$PROJECTNAME" >> codedeploy/.env_vars
       - aws-cli/setup:
           aws-access-key-id: STAGING_AWS_ACCESS_KEY_ID
           aws-secret-access-key: STAGING_AWS_SECRET_ACCESS_KEY
